@@ -1,0 +1,486 @@
+openapi: 3.0.3
+info:
+  title: Eagle Bank API
+  version: 2.0.0
+  description: |
+    REST API for the Eagle Bank take-home exercise. This spec includes the
+    authentication endpoint plus the user, account, and transaction operations
+    required by the scenarios.
+servers:
+  - url: http://localhost:3000
+    description: Local Express server
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Users
+  - name: Accounts
+  - name: Transactions
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: sam@example.com
+        password:
+          type: string
+          format: password
+          example: Password123!
+    LoginResponse:
+      type: object
+      required: [accessToken]
+      properties:
+        accessToken:
+          type: string
+    CreateUserRequest:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        fullName:
+          type: string
+    UpdateUserRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+    User:
+      type: object
+      required: [id, email, fullName]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+    CreateAccountRequest:
+      type: object
+      required: [name, accountType]
+      properties:
+        name:
+          type: string
+          example: Everyday Account
+        accountType:
+          type: string
+          example: checking
+    UpdateAccountRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        accountType:
+          type: string
+    Account:
+      type: object
+      required: [id, userId, name, accountType, balance]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        accountType:
+          type: string
+        balance:
+          type: string
+          example: "125.50"
+    CreateTransactionRequest:
+      type: object
+      required: [type, amount]
+      properties:
+        type:
+          type: string
+          enum: [deposit, withdrawal]
+        amount:
+          type: string
+          example: "25.00"
+        description:
+          type: string
+    Transaction:
+      type: object
+      required: [id, accountId, type, amount, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [deposit, withdrawal]
+        amount:
+          type: string
+          example: "25.00"
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    TransactionCreateResponse:
+      type: object
+      required: [account, transaction]
+      properties:
+        account:
+          $ref: '#/components/schemas/Account'
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service health
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate and return a JWT bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/users:
+    post:
+      tags: [Users]
+      summary: Create a user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/users/{userId}:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Users]
+      summary: Fetch the authenticated user's details
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: User attempted to access another user's record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags: [Users]
+      summary: Update the authenticated user's details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: User attempted to update another user's record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Users]
+      summary: Delete the authenticated user if they have no accounts
+      responses:
+        '204':
+          description: User deleted
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: User attempted to delete another user's record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User still has bank accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/accounts:
+    post:
+      tags: [Accounts]
+      summary: Create a bank account for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags: [Accounts]
+      summary: List bank accounts for the authenticated user
+      responses:
+        '200':
+          description: Matching accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/accounts/{accountId}:
+    parameters:
+      - in: path
+        name: accountId
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Accounts]
+      summary: Fetch one owned bank account
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: Account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    patch:
+      tags: [Accounts]
+      summary: Update one owned bank account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccountRequest'
+      responses:
+        '200':
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: Account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    delete:
+      tags: [Accounts]
+      summary: Delete one owned bank account
+      responses:
+        '204':
+          description: Account deleted
+        '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: Account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /v1/accounts/{accountId}/transactions:
+    parameters:
+      - in: path
+        name: accountId
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Transactions]
+      summary: Create a deposit or withdrawal for an owned account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: Transaction created and account balance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionCreateResponse'
+        '400': { description: Validation failed, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: Account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '422': { description: Insufficient funds, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    get:
+      tags: [Transactions]
+      summary: List transactions for one owned account
+      responses:
+        '200':
+          description: Matching transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '404': { description: Account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /v1/accounts/{accountId}/transactions/{transactionId}:
+    parameters:
+      - in: path
+        name: accountId
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: transactionId
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Transactions]
+      summary: Fetch one transaction for one owned account
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } } 
+        '404': { description: Transaction or account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }

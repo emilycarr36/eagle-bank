@@ -1,0 +1,31 @@
+{
+  "name": "eagle-bank-node-api-express-sql",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Eagle Bank take-home API built with modern Express, SQLite, JWT auth and Swagger UI for Node 24.",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "jest --runInBand",
+    "init-db": "node src/db/init.js",
+    "test:unit": "jest --runInBand tests/unit",
+    "test:integration": "jest --runInBand tests/integration"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0",
+    "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "supertest": "^7.1.1"
+  }
+}
