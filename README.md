@@ -350,6 +350,3 @@ npm run dev    # same as start in this repo
 npm run init-db
 npm test
 ```
-
-## Dependency note
-Because this repo is pinned for **Node 10.15.3**, the dependency versions are also intentionally pinned to older compatible releases. That is deliberate so the app matches your runtime rather than assuming a newer local environment.
