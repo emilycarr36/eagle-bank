@@ -105,19 +105,6 @@ eagle-bank-node-api-express-sql/
 └── README.md
 ```
 
-
-
-## Note if you are upgrading from the earlier cents-based zip
-
-This version stores money in SQLite using `balance_pence` and `amount_pence` columns rather than the earlier `balance_cents` and `amount_cents` names.
-
-If you already created a database file from the earlier zip, delete the old SQLite file and re-initialise the schema so the new column names are created cleanly:
-
-```bash
-rm -f data/eagle-bank.sqlite
-npm run init-db
-```
-
 ## Requirements
 
 - **Node.js 24.x**
@@ -129,21 +116,6 @@ You can verify your version with:
 node -v
 npm -v
 ```
-
-## What was uplifted for Node 24
-
-This zip keeps the same API behaviour, Swagger docs, Jest coverage, and SQLite database model, but updates the runtime target and package versions so it fits a current Node environment better.
-
-The main changes are:
-- **Express 5** instead of the older Express 4 line
-- **jsonwebtoken 9** for the maintained major version
-- **uuid 11** for current UUID support
-- **swagger-ui-express 5**
-- **Jest 30** and **Supertest 7**
-- a **Node 24** engine target and `.nvmrc` file
-- a `npm run dev` script using Node's built-in `--watch` mode
-
-I kept SQLite because it is still the best fit for a take-home: real SQL, minimal setup, and easy local inspection.
 
 ## Install dependencies
 
