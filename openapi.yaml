@@ -16,6 +16,7 @@ tags:
   - name: Users
   - name: Accounts
   - name: Transactions
+  - name: Transfers
 components:
   securitySchemes:
     bearerAuth:
@@ -484,40 +485,41 @@ paths:
         '401': { description: Missing or invalid token, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
         '403': { description: Account is not owned by the caller, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } } 
         '404': { description: Transaction or account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-/v1/transfers:
-  post:
-    summary: Transfer money between accounts
-    description: Transfers money from one account to another. The authenticated user must own the source account.
-    security:
-      - bearerAuth: []
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - fromAccountId
-              - toAccountId
-              - amount
-            properties:
-              fromAccountId:
-                type: string
-                format: uuid
-              toAccountId:
-                type: string
-                format: uuid
-              amount:
-                type: string
-                example: "25.00"
-    responses:
-      "201":
-        description: Transfer completed
-      "400":
-        description: Invalid request
-      "403":
-        description: Forbidden
-      "404":
-        description: Account not found
-      "422":
-        description: Insufficient funds
+  /v1/transfers:
+    post:
+      tags: [Transfers]
+      summary: Transfer money between accounts
+      description: Transfers money from one account to another. The authenticated user must own the source account.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fromAccountId
+                - toAccountId
+                - amount
+              properties:
+                fromAccountId:
+                  type: string
+                  format: uuid
+                toAccountId:
+                  type: string
+                  format: uuid
+                amount:
+                  type: string
+                  example: "25.00"
+      responses:
+        "201":
+          description: Transfer completed
+        "400":
+          description: Invalid request
+        "403":
+          description: Forbidden
+        "404":
+          description: Account not found
+        "422":
+          description: Insufficient funds
