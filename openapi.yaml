@@ -487,7 +487,10 @@ paths:
         '404': { description: Transaction or account not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
   /v1/transfers:
     post:
+<<<<<<< HEAD
       tags: [Transfers]
+=======
+>>>>>>> bac2a0f46dcd8e6a0620a364c8630d51d4abd1d9
       summary: Transfer money between accounts
       description: Transfers money from one account to another. The authenticated user must own the source account.
       security:
