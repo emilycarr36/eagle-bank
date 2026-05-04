@@ -9,6 +9,7 @@ const healthRoutes = require("./routes/healthRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const accountRoutes = require("./routes/accountRoutes");
+const transferRoutes = require("./routes/transferRoutes");
 const { notFoundHandler, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -38,6 +39,7 @@ app.use(healthRoutes);
 app.use(authRoutes);
 app.use(userRoutes);
 app.use(accountRoutes);
+app.use(transferRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

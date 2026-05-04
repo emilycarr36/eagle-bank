@@ -48,16 +48,24 @@ jest.mock("../../src/repositories/transactionRepository", function() {
   };
 });
 
+jest.mock("../../src/repositories/transferRepository", function() {
+  return {
+    createTransfer: jest.fn(),
+  };
+});
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const uuid = require("uuid");
 const userRepository = require("../../src/repositories/userRepository");
 const accountRepository = require("../../src/repositories/accountRepository");
 const transactionRepository = require("../../src/repositories/transactionRepository");
+const transferRepository = require("../../src/repositories/transferRepository");
 const userService = require("../../src/services/userService");
 const authService = require("../../src/services/authService");
 const accountService = require("../../src/services/accountService");
 const transactionService = require("../../src/services/transactionService");
+const transferService = require("../../src/services/transferService")
 const { AppError } = require("../../src/utils/errors");
 
 describe("userService", function() {
@@ -249,5 +257,96 @@ describe("transactionService", function() {
     transactionRepository.findTransactionById.mockResolvedValue({ id: "tx-1", account_id: "acc-1", type: "deposit", amount_pence: 1000, description: null, created_at: "c" });
     const result = await transactionService.getTransaction("acc-1", "tx-1", "u1");
     expect(result.id).toBe("tx-1");
+  });
+});
+describe("transferService", function () {
+  beforeEach(function () {
+    jest.clearAllMocks();
+  });
+
+  it("transfers money when source account belongs to the user and has sufficient funds", async function () {
+    accountRepository.findAccountById
+      .mockResolvedValueOnce({
+        id: "source-account-id",
+        user_id: "user-id",
+        balance_pence: 5000
+      })
+      .mockResolvedValueOnce({
+        id: "target-account-id",
+        user_id: "other-user-id",
+        balance_pence: 1000
+      });
+
+    transferRepository.createTransfer.mockResolvedValue({
+      transferId: "transfer-id",
+      fromAccountId: "source-account-id",
+      toAccountId: "target-account-id",
+      amountPence: 2500,
+      fromBalanceAfter: 2500,
+      toBalanceAfter: 3500
+    });
+
+    const result = await transferService.transferMoney({
+      authenticatedUserId: "user-id",
+      fromAccountId: "source-account-id",
+      toAccountId: "target-account-id",
+      amount: "25.00"
+    });
+
+    expect(result.fromAccountId).toBe("source-account-id");
+    expect(result.toAccountId).toBe("target-account-id");
+    expect(result.amountPence).toBe(2500);
+    expect(transferRepository.createTransfer).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects the transfer when the source account does not belong to the authenticated user", async function () {
+    accountRepository.findAccountById.mockResolvedValueOnce({
+      id: "source-account-id",
+      user_id: "another-user-id",
+      balance_pence: 5000
+    });
+
+    await expect(
+      transferService.transferMoney({
+        authenticatedUserId: "user-id",
+        fromAccountId: "source-account-id",
+        toAccountId: "target-account-id",
+        amount: "10.00"
+      })
+    ).rejects.toThrow("403");
+  });
+
+  it("rejects the transfer when the source account has insufficient funds", async function () {
+    accountRepository.findAccountById
+      .mockResolvedValueOnce({
+        id: "source-account-id",
+        user_id: "user-id",
+        balance_pence: 1000
+      })
+      .mockResolvedValueOnce({
+        id: "target-account-id",
+        user_id: "other-user-id",
+        balance_pence: 1000
+      });
+
+    await expect(
+      transferService.transferMoney({
+        authenticatedUserId: "user-id",
+        fromAccountId: "source-account-id",
+        toAccountId: "target-account-id",
+        amount: "25.00"
+      })
+    ).rejects.toThrow("422");
+  });
+
+  it("rejects transfers to the same account", async function () {
+    await expect(
+      transferService.transferMoney({
+        authenticatedUserId: "user-id",
+        fromAccountId: "same-account-id",
+        toAccountId: "same-account-id",
+        amount: "10.00"
+      })
+    ).rejects.toThrow("400");
   });
 });
