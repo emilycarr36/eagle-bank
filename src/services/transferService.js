@@ -27,41 +27,41 @@ const { parseAmountToPence, penceToAmount } = require("../utils/money");
  */
 async function transferMoney(params) {
   if (!params.fromAccountId) {
-    throw new AppError("fromAccountId is required", 400);
+    throw new AppError(400, "fromAccountId is required");
   }
 
   if (!params.toAccountId) {
-    throw new AppError("toAccountId is required", 400);
+    throw new AppError(400, "toAccountId is required");
   }
 
   if (params.fromAccountId === params.toAccountId) {
-    throw new AppError("Cannot transfer money to the same account", 400);
+    throw new AppError(400, "Cannot transfer money to the same account");
   }
 
   const amountPence = parseAmountToPence(params.amount);
 
   if (amountPence <= 0) {
-    throw new AppError("Amount must be greater than zero", 400);
+    throw new AppError(400, "Amount must be greater than zero");
   }
 
   const fromAccount = await accountRepository.findAccountById(params.fromAccountId);
 
   if (!fromAccount) {
-    throw new AppError("Source account not found", 404);
+    throw new AppError(404, "Source account not found");
   }
 
   if (fromAccount.user_id !== params.authenticatedUserId) {
-    throw new AppError("You do not have access to the source account", 403);
+    throw new AppError(403,"You do not have access to the source account");
   }
 
   const toAccount = await accountRepository.findAccountById(params.toAccountId);
 
   if (!toAccount) {
-    throw new AppError("Target account not found", 404);
+    throw new AppError(404, "Target account not found");
   }
 
   if (fromAccount.balance_pence < amountPence) {
-    throw new AppError("Insufficient funds", 422);
+    throw new AppError(422, "Insufficient funds");
   }
 
   const transferId = uuidv4();

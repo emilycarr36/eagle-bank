@@ -313,7 +313,7 @@ describe("transferService", function () {
         toAccountId: "target-account-id",
         amount: "10.00"
       })
-    ).rejects.toThrow("403");
+    ).rejects.toThrow("You do not have access to the source account");
   });
 
   it("rejects the transfer when the source account has insufficient funds", async function () {
@@ -336,7 +336,7 @@ describe("transferService", function () {
         toAccountId: "target-account-id",
         amount: "25.00"
       })
-    ).rejects.toThrow("422");
+    ).rejects.toThrow("Insufficient funds");
   });
 
   it("rejects transfers to the same account", async function () {
@@ -347,6 +347,6 @@ describe("transferService", function () {
         toAccountId: "same-account-id",
         amount: "10.00"
       })
-    ).rejects.toThrow("400");
+    ).rejects.toThrow("Cannot transfer money to the same account");
   });
 });

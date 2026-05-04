@@ -1,5 +1,6 @@
 const express = require("express");
 const transferService = require("../services/transferService");
+const { authenticate } = require("../middleware/authenticate");
 
 const router = express.Router();
 
@@ -13,10 +14,10 @@ const router = express.Router();
  *
  * Business rules are intentionally kept out of this file.
  */
-router.post("/v1/transfers", async function createTransfer(req, res, next) {
+router.post("/v1/transfers", authenticate, async function createTransfer(req, res, next) {
   try {
     const transfer = await transferService.transferMoney({
-      authenticatedUserId: req.user.userId,
+      authenticatedUserId: req.user.id,
       fromAccountId: req.body.fromAccountId,
       toAccountId: req.body.toAccountId,
       amount: req.body.amount
